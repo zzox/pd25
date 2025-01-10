@@ -18,17 +18,22 @@ import kha.input.KeyCode;
 class WorldScene extends Scene {
     var image:Image;
     var mask:Image;
-    var pipeline:PipelineState;
+    var noise:Image;
     var maskId:TextureUnit;
+    var noiseId:TextureUnit;
+    var pipeline:PipelineState;
 
     var maskedSprites:Array<MaskedSprite> = [];
     var screenMask:Sprite;
+    var noiseItems:Array<Sprite> = [];
 
     override function create () {
         image = kha.Image.createRenderTarget(160, 90);
 
         final shader = new ImageShader(Shaders.painter_image_vert, Shaders.pipeline_frag);
         mask = kha.Image.createRenderTarget(160, 90);
+        noise = kha.Image.createRenderTarget(160, 90);
+        noiseId = shader.pipeline.getTextureUnit('noise');
         maskId = shader.pipeline.getTextureUnit('mask');
 
         pipeline = shader.pipeline;
@@ -41,8 +46,16 @@ class WorldScene extends Scene {
         text.makeText('TESTING testing...', Assets.fonts.nope_6p, 16);
         addSprite(text);
 
+        for (item in [new IntVec2(0, 0), new IntVec2(-256, 0), new IntVec2(0, -256), new IntVec2(-256, -256)]) {
+            final noise = new Sprite(item.toVec2(), Assets.images.noise1);
+            noise.alpha = 0.5;
+            noiseItems.push(noise);
+            // addSprite(noise);
+        }
+
         screenMask = new Sprite(new Vec2(0, 0));
         screenMask.makeRect(0xff000000, new IntVec2(game.size.x, game.size.y));
+        screenMask.scrollFactor.set(0, 0);
 
         camera.bgColor = 0xff3f3f74;
 
@@ -53,6 +66,14 @@ class WorldScene extends Scene {
         super.update(delta);
         for (s in maskedSprites) {
             for (m in s.masks) m.update(delta);
+        }
+
+        for (n in noiseItems) {
+            n.x++;
+            n.y++;
+
+            if (n.x == 256) n.x -= 512;
+            if (n.y == 256) n.y -= 512;
         }
 
         if (game.keys.pressed(KeyCode.Up)) {
@@ -98,12 +119,19 @@ class WorldScene extends Scene {
         if (screenMask.alpha > 0) {
             screenMask.render(mask.g2, camera);
         }
-
         mask.g2.end();
+
+        // draw noise items to the noise target
+        noise.g2.begin();
+        for (n in noiseItems) {
+            n.render(noise.g2, camera);
+        }
+        noise.g2.end();
 
         // set the mask texture
         g4.begin();
         g4.setTexture(maskId, mask);
+        g4.setTexture(noiseId, noise);
         g4.end();
 
         // draw the texture with the pipeline to be drawn to the render target

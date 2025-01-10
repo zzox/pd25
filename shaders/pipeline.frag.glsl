@@ -11,10 +11,13 @@ vec4 colors[32];
 float minDist = 3.;
 vec4 selected;
 
+uniform sampler2D noise;
+
 void main() {
     /*--------------------- MASK SECTION ---------------------*/
 	vec4 texcolor = texture(tex, texCoord);
     vec4 maskcolor = texture(mask, texCoord);
+	vec4 noisecolor = texture(noise, texCoord);
 
     if (maskcolor.a == 0.0) {
         discard;
@@ -63,6 +66,14 @@ void main() {
         }
     }
 
+    /*-------------------- NOISE SECTION ---------------------*/
+    // affect with noise if not white
+    if (noisecolor.r < 0.25 && selected.r < 0.8 && selected.g < 0.8 && selected.b < 0.8) {
+        selected.rgb *= 0.8;
+    }
+
     /*------------------------ OUTPUT ------------------------*/
     FragColor = selected;
+    // FragColor = texcolor;
+    // FragColor = noisecolor;
 }
