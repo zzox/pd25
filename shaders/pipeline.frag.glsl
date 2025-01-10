@@ -3,6 +3,7 @@
 uniform sampler2D tex;
 in vec2 texCoord;
 in vec4 color;
+in float time;
 out vec4 FragColor;
 
 uniform sampler2D mask;
@@ -68,7 +69,7 @@ void main() {
 
     /*-------------------- NOISE SECTION ---------------------*/
     // affect with noise if not white
-    if (noisecolor.r < 0.25 && selected.r < 0.8 && selected.g < 0.8 && selected.b < 0.8) {
+    if (noisecolor.r < (.27 + sin(time) * .07) && selected.r < 0.8 && selected.g < 0.8 && selected.b < 0.8) {
         selected.rgb *= 0.8;
     }
 

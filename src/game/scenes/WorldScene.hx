@@ -11,6 +11,7 @@ import kha.Color;
 import kha.Image;
 import kha.Shaders;
 import kha.graphics2.Graphics;
+import kha.graphics4.ConstantLocation;
 import kha.graphics4.PipelineState;
 import kha.graphics4.TextureUnit;
 import kha.input.KeyCode;
@@ -21,8 +22,10 @@ class WorldScene extends Scene {
     var noise:Image;
     var maskId:TextureUnit;
     var noiseId:TextureUnit;
+    var timeId:ConstantLocation;
     var pipeline:PipelineState;
 
+    var time:Float = 0;
     var maskedSprites:Array<MaskedSprite> = [];
     var screenMask:Sprite;
     var noiseItems:Array<Sprite> = [];
@@ -30,10 +33,11 @@ class WorldScene extends Scene {
     override function create () {
         image = kha.Image.createRenderTarget(160, 90);
 
-        final shader = new ImageShader(Shaders.painter_image_vert, Shaders.pipeline_frag);
+        final shader = new ImageShader(Shaders.pipeline_vert, Shaders.pipeline_frag);
         mask = kha.Image.createRenderTarget(160, 90);
         noise = kha.Image.createRenderTarget(160, 90);
         noiseId = shader.pipeline.getTextureUnit('noise');
+        timeId = shader.pipeline.getConstantLocation('uTime');
         maskId = shader.pipeline.getTextureUnit('mask');
 
         pipeline = shader.pipeline;
@@ -63,6 +67,7 @@ class WorldScene extends Scene {
     }
 
     override function update (delta:Float) {
+        time += delta;
         super.update(delta);
         for (s in maskedSprites) {
             for (m in s.masks) m.update(delta);
@@ -130,8 +135,10 @@ class WorldScene extends Scene {
 
         // set the mask texture
         g4.begin();
+        g4.setPipeline(pipeline);
         g4.setTexture(maskId, mask);
         g4.setTexture(noiseId, noise);
+        g4.setFloat(timeId, time);
         g4.end();
 
         // draw the texture with the pipeline to be drawn to the render target
