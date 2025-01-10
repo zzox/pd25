@@ -5,6 +5,7 @@ import core.Scene;
 import core.Sprite;
 import core.Timers;
 import core.Types;
+import core.Util;
 import kha.Assets;
 import kha.Color;
 import kha.Image;
@@ -18,6 +19,8 @@ class TestScene extends Scene {
     var mask:Image;
     var pipeline:PipelineState;
     var maskId:TextureUnit;
+
+    var maskedSprites:Array<MaskedSprite> = [];
 
     override function create () {
         image = kha.Image.createRenderTarget(160, 90);
@@ -43,6 +46,20 @@ class TestScene extends Scene {
         timerForRelease();
     }
 
+    override function update (delta:Float) {
+        super.update(delta);
+        for (s in maskedSprites) {
+            for (m in s.masks) m.update(delta);
+        }
+    }
+
+    function timerForRelease () {
+        final flicker = new Flicker();
+        addSprite(flicker);
+        maskedSprites.push(flicker);
+        timers.addTimer(new Timer(3.0, timerForRelease));
+    }
+
     override function render (g2:Graphics, g4:kha.graphics4.Graphics, clears:Bool) {
         // draw to the scene's render target
         image.g2.begin(clears, camera.bgColor);
@@ -59,19 +76,8 @@ class TestScene extends Scene {
 
         // make transparent, draw to the mask
         mask.g2.begin(true, 0x00000000);
-        mask.g2.color = 256 * 0x1000000 + 0xffffffff;
-        for (sprite in sprites) {
-            if (sprite.depth == 2) {
-                // TODO: use render method
-                mask.g2.drawImage(Assets.images.mask_8, sprite.x - 4, sprite.y - 4);
-            }
-        }
-        mask.g2.color = 128 * 0x1000000 + 0xffffffff;
-        for (sprite in sprites) {
-            if (sprite.depth == 2) {
-                // TODO: use render method
-                mask.g2.drawImage(Assets.images.mask_16, sprite.x - 6, sprite.y - 6);
-            }
+        for (s in maskedSprites) {
+            for (m in s.masks) m.render(mask.g2, camera);
         }
         mask.g2.end();
 
@@ -88,23 +94,46 @@ class TestScene extends Scene {
         // g2.drawImage(mask, 0, 0);
         g2.end();
     }
-
-    function timerForRelease () {
-        addSprite(new Flicker());
-        timers.addTimer(new Timer(3.0, timerForRelease));
-    }
 }
 
-class Flicker extends Sprite {
+class MaskedSprite extends Sprite {
+    public var masks:Array<Mask> = [];
+}
+
+class Flicker extends MaskedSprite {
     public function new () {
-        super(new Vec2(4, 4), Assets.images.flicker, new IntVec2(8, 8));
+        super(new Vec2(4, 4), Assets.images.flicker, new IntVec2(16, 16));
 
         animation.add('play', [0, 1], 0.25 + Math.random() * 0.75);
         animation.play('play');
 
         body.velocity.set(Math.random() < 0.5 ? 7.5 : 15, Math.random() < 0.5 ? 7.5 : 15);
+        body.drag.set(2.5, 2.5);
         physicsEnabled = true;
 
         depth = 2;
+
+        masks.push(new Mask(this, 2, 0.5));
+        masks.push(new Mask(this, 4, 1.0));
+    }
+}
+
+class Mask extends Sprite {
+    var mSize:Int;
+    var parent:MaskedSprite;
+    public function new (parent:MaskedSprite, size:Int, alpha:Float) {
+        super(new Vec2(parent.x, parent.y), Assets.images.masks, new IntVec2(16, 16));
+        tileIndex = size;
+        this.alpha = alpha;
+        this.mSize = size;
+        this.parent = parent;
+    }
+
+    override function update (delta:Float) {
+        super.update(delta);
+        setPosition(
+            lerp(parent.x, x, 0.2 - ((8 - mSize) * 0.02)),
+            lerp(parent.y, y, 0.2 - ((8 - mSize) * 0.02))
+        );
     }
 }
