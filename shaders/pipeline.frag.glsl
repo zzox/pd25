@@ -70,7 +70,7 @@ void main() {
     /*-------------------- NOISE SECTION ---------------------*/
     // affect with noise if not white
     if (noisecolor.r < (.27 + sin(time) * .07) && selected.r < 0.8 && selected.g < 0.8 && selected.b < 0.8) {
-        selected.rgb *= 0.8;
+        selected.rgb = clamp(selected.rgb * 0.8, 0.0, 1.0);
     }
 
     /*------------------------ OUTPUT ------------------------*/

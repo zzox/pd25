@@ -6,6 +6,9 @@ import core.Sprite;
 import core.Timers;
 import core.Types;
 import core.Util;
+import game.actors.Player;
+import game.objects.CollisionItem;
+import game.objects.Mask;
 import kha.Assets;
 import kha.Color;
 import kha.Image;
@@ -30,26 +33,23 @@ class WorldScene extends Scene {
     var screenMask:Sprite;
     var noiseItems:Array<Sprite> = [];
 
-    override function create () {
-        image = kha.Image.createRenderTarget(160, 90);
+    var collisionItems:Array<CollisionItem> = [];
+    var player:Player;
 
+    override function create () {
+        // GFX stuff
+        image = kha.Image.createRenderTarget(160, 90);
         final shader = new ImageShader(Shaders.pipeline_vert, Shaders.pipeline_frag);
         mask = kha.Image.createRenderTarget(160, 90);
         noise = kha.Image.createRenderTarget(160, 90);
-        noiseId = shader.pipeline.getTextureUnit('noise');
         timeId = shader.pipeline.getConstantLocation('uTime');
+        // WARN: 'noise' needs to be before 'mask' for some reason?
+        noiseId = shader.pipeline.getTextureUnit('noise');
         maskId = shader.pipeline.getTextureUnit('mask');
 
         pipeline = shader.pipeline;
 
-        final rect = new Sprite(new Vec2(10, 20));
-        rect.makeRect(Color.Red, new IntVec2(30, 40));
-        addSprite(rect);
-
-        final text = new Sprite(new Vec2(50, 50));
-        text.makeText('TESTING testing...', Assets.fonts.nope_6p, 16);
-        addSprite(text);
-
+        // noise
         for (item in [new IntVec2(0, 0), new IntVec2(-256, 0), new IntVec2(0, -256), new IntVec2(-256, -256)]) {
             final noise = new Sprite(item.toVec2(), Assets.images.noise1);
             noise.alpha = 0.5;
@@ -57,11 +57,20 @@ class WorldScene extends Scene {
             // addSprite(noise);
         }
 
+        // game sprites
+        addSprite(new Sprite(new Vec2(0, 0), Assets.images.bg1));
+
         screenMask = new Sprite(new Vec2(0, 0));
         screenMask.makeRect(0xff000000, new IntVec2(game.size.x, game.size.y));
         screenMask.scrollFactor.set(0, 0);
 
         camera.bgColor = 0xff3f3f74;
+
+        game.physics.gravity.y = 200;
+
+        collisionItems.push(new CollisionItem(23, 87, 104, 3, 'tile', All));
+        addSprite(player = new Player());
+        maskedSprites.push(player);
 
         timerForRelease();
     }
@@ -79,6 +88,15 @@ class WorldScene extends Scene {
 
             if (n.x == 256) n.x -= 512;
             if (n.y == 256) n.y -= 512;
+        }
+
+        for (c in collisionItems) {
+            game.physics.collide(player.body, c.body);
+            // final did = game.physics.collide(player.body, c.body);
+            // if (did) {
+            //     trace(player.body.position.x, player.body.position.y,
+            //         c.body.position.x, c.body.position.y);
+            // }
         }
 
         if (game.keys.pressed(KeyCode.Up)) {
@@ -151,10 +169,6 @@ class WorldScene extends Scene {
     }
 }
 
-class MaskedSprite extends Sprite {
-    public var masks:Array<Mask> = [];
-}
-
 class Flicker extends MaskedSprite {
     public function new () {
         super(new Vec2(4, 4), Assets.images.flicker, new IntVec2(16, 16));
@@ -168,27 +182,7 @@ class Flicker extends MaskedSprite {
 
         depth = 2;
 
-        masks.push(new Mask(this, 2, 0.5));
-        masks.push(new Mask(this, 4, 1.0));
-    }
-}
-
-class Mask extends Sprite {
-    var mSize:Int;
-    var parent:MaskedSprite;
-    public function new (parent:MaskedSprite, size:Int, alpha:Float) {
-        super(new Vec2(parent.x, parent.y), Assets.images.masks, new IntVec2(16, 16));
-        tileIndex = size;
-        this.alpha = alpha;
-        this.mSize = size;
-        this.parent = parent;
-    }
-
-    override function update (delta:Float) {
-        super.update(delta);
-        setPosition(
-            lerp(parent.x, x, 0.2 - ((8 - mSize) * 0.02)),
-            lerp(parent.y, y, 0.2 - ((8 - mSize) * 0.02))
-        );
+        masks.push(new Mask(this, 0, 0.5));
+        masks.push(new Mask(this, 2, 1.0));
     }
 }
