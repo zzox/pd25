@@ -1,7 +1,7 @@
 import core.Game;
 import core.Logs;
 import core.Types;
-import game.scenes.TestScene;
+import game.scenes.WorldScene;
 
 #if kha_html5
 import js.Browser.document;
@@ -15,9 +15,9 @@ class Main {
         setFullWindowCanvas();
         new Game(
             new IntVec2(1300, 750),
-            new TestScene(),
+            new WorldScene(),
             PixelPerfect,
-            'boilerplate',
+            'pd25',
             new IntVec2(160, 90),
             (e) -> {
                 sendErrorLogs(e);

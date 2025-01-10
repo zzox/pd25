@@ -14,7 +14,7 @@ import kha.graphics2.Graphics;
 import kha.graphics4.PipelineState;
 import kha.graphics4.TextureUnit;
 
-class TestScene extends Scene {
+class WorldScene extends Scene {
     var image:Image;
     var mask:Image;
     var pipeline:PipelineState;
@@ -25,11 +25,9 @@ class TestScene extends Scene {
     override function create () {
         image = kha.Image.createRenderTarget(160, 90);
 
-        final shader = new ImageShader(Shaders.painter_image_vert, Shaders.w_masks_frag);
+        final shader = new ImageShader(Shaders.painter_image_vert, Shaders.pipeline_frag);
         mask = kha.Image.createRenderTarget(160, 90);
         maskId = shader.pipeline.getTextureUnit('mask');
-        // timeId = shader.pipeline.getConstantLocation('uTime');
-        // mask = Assets.images.spotlight_32;
 
         pipeline = shader.pipeline;
 
@@ -74,7 +72,7 @@ class TestScene extends Scene {
 #end
         image.g2.end();
 
-        // make transparent, draw to the mask
+        // make transparent, draw masks to the mask target
         mask.g2.begin(true, 0x00000000);
         for (s in maskedSprites) {
             for (m in s.masks) m.render(mask.g2, camera);
