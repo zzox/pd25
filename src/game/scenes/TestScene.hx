@@ -44,16 +44,8 @@ class TestScene extends Scene {
     }
 
     override function render (g2:Graphics, g4:kha.graphics4.Graphics, clears:Bool) {
-        // g4.begin();
-        // g4.setTexture(maskId, mask);
-        // g4.end();
-
+        // draw to the scene's render target
         image.g2.begin(clears, camera.bgColor);
-        // if (clears) {
-        //     // WARN: is this extra call necessary?
-        //     image.g2.clear(camera.bgColor);
-        // }
-
         for (sprite in sprites) {
             sprite.render(image.g2, camera);
         }
@@ -63,29 +55,37 @@ class TestScene extends Scene {
             sprite.renderDebug(image.g2, camera);
         }
 #end
-
         image.g2.end();
 
-        // make transparent
+        // make transparent, draw to the mask
         mask.g2.begin(true, 0x00000000);
+        mask.g2.color = 256 * 0x1000000 + 0xffffffff;
         for (sprite in sprites) {
             if (sprite.depth == 2) {
                 // TODO: use render method
-                mask.g2.drawImage(Assets.images.mask_8, sprite.x - 2, sprite.y - 2);
+                mask.g2.drawImage(Assets.images.mask_8, sprite.x - 4, sprite.y - 4);
+            }
+        }
+        mask.g2.color = 128 * 0x1000000 + 0xffffffff;
+        for (sprite in sprites) {
+            if (sprite.depth == 2) {
+                // TODO: use render method
+                mask.g2.drawImage(Assets.images.mask_16, sprite.x - 6, sprite.y - 6);
             }
         }
         mask.g2.end();
 
+        // set the mask texture
         g4.begin();
         g4.setTexture(maskId, mask);
         g4.end();
 
+        // draw the texture with the pipeline to be drawn to the render target
+        // which will be scaled
         g2.begin();
-        // g4.setFloat(timeId, time);
         g2.pipeline = pipeline;
         g2.drawImage(image, 0, 0);
         // g2.drawImage(mask, 0, 0);
-
         g2.end();
     }
 

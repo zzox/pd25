@@ -15,11 +15,11 @@ void main() {
 	// texcolor.rgb *= color.a;
     // texcolor.bgr = texcolor.rgb;
 
-    if (maskcolor.a != 1.0) {
+    if (maskcolor.a == 0.0) {
         discard;
     }
 
-    texcolor.a = maskcolor.a;
+    texcolor.rgb = texcolor.rgb * maskcolor.a;
 
     // if (posX < 17.0 && posY < 17.0) {
     //     texcolor.rgb = vec3(1.0, 0.0, 1.0);
