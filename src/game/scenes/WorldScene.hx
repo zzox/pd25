@@ -13,6 +13,7 @@ import kha.Shaders;
 import kha.graphics2.Graphics;
 import kha.graphics4.PipelineState;
 import kha.graphics4.TextureUnit;
+import kha.input.KeyCode;
 
 class WorldScene extends Scene {
     var image:Image;
@@ -21,6 +22,7 @@ class WorldScene extends Scene {
     var maskId:TextureUnit;
 
     var maskedSprites:Array<MaskedSprite> = [];
+    var screenMask:Sprite;
 
     override function create () {
         image = kha.Image.createRenderTarget(160, 90);
@@ -36,8 +38,11 @@ class WorldScene extends Scene {
         addSprite(rect);
 
         final text = new Sprite(new Vec2(50, 50));
-        text.makeText('We made it!', Assets.fonts.nope_6p, 16);
+        text.makeText('TESTING testing...', Assets.fonts.nope_6p, 16);
         addSprite(text);
+
+        screenMask = new Sprite(new Vec2(0, 0));
+        screenMask.makeRect(0xff000000, new IntVec2(game.size.x, game.size.y));
 
         camera.bgColor = 0xff3f3f74;
 
@@ -48,6 +53,18 @@ class WorldScene extends Scene {
         super.update(delta);
         for (s in maskedSprites) {
             for (m in s.masks) m.update(delta);
+        }
+
+        if (game.keys.pressed(KeyCode.Up)) {
+            screenMask.alpha = clamp(screenMask.alpha -= 0.03, 0.0, 1.0);
+        }
+
+        if (game.keys.pressed(KeyCode.Down)) {
+            screenMask.alpha = clamp(screenMask.alpha += 0.03, 0.0, 1.0);
+        }
+
+        if (game.keys.justPressed(KeyCode.R)) {
+            game.switchScene(new WorldScene());
         }
     }
 
@@ -77,6 +94,11 @@ class WorldScene extends Scene {
         for (s in maskedSprites) {
             for (m in s.masks) m.render(mask.g2, camera);
         }
+
+        if (screenMask.alpha > 0) {
+            screenMask.render(mask.g2, camera);
+        }
+
         mask.g2.end();
 
         // set the mask texture
