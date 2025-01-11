@@ -70,6 +70,7 @@ class WorldScene extends Scene {
 
         collisionItems.push(new CollisionItem(23, 86, 104, 3, 'tile', All));
         addSprite(player = new Player());
+        addSprite(player.weapon);
         maskedSprites.push(player);
 
         timerForRelease();

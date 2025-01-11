@@ -5,6 +5,7 @@ import core.Sprite;
 import core.Types;
 import core.Util;
 import game.objects.Mask;
+import game.objects.Weapon;
 import game.utils.InputRes;
 import kha.Assets;
 import kha.graphics2.Graphics;
@@ -16,14 +17,6 @@ enum MoveState {
     PreStrike;
     Strike;
 }
-
-// typedef Gun = {
-//     var type:BulletType;
-//     var reloadTime:Float;
-//     var projAngles:Array<Float>;
-//     var knockback:Float;
-//     var velocity:Float;
-// }
 
 class Player extends MaskedSprite {
     static inline final AIRTIME_BUFFER:Float = 0.1;
@@ -49,6 +42,7 @@ class Player extends MaskedSprite {
     // var gun:Gun;
 
     var input:InputRes;
+    public var weapon:Weapon;
 
     // var gameScene:GameScene;
     // public function new (gameScene:GameScene, pos:Vec2) {
@@ -81,6 +75,8 @@ class Player extends MaskedSprite {
 
         masks.push(new Mask(this, 0, 1.0));
         masks.push(new Mask(this, 1, 0.5));
+
+        weapon = new Weapon(this);
     }
 
     override function update (delta:Float) {
@@ -204,11 +200,13 @@ class Player extends MaskedSprite {
     function preStrike () {
         preStrikeTime = 0;
         moveState = PreStrike;
+        weapon.state = WPreStrike;
     }
 
     function strike () {
         strikeTime = 0;
         moveState = Strike;
+        weapon.state = WStrike;
     }
 
     // add velocity to current velocity.
@@ -282,12 +280,12 @@ class Player extends MaskedSprite {
         }
 
         // TEMP:
-        if (body.acceleration.x > 0 && !flipX) {
-            flipX = true;
+        if (body.acceleration.x > 0 && flipX) {
+            flipX = false;
         }
 
-        if (body.acceleration.x < 0 && flipX) {
-            flipX = false;
+        if (body.acceleration.x < 0 && !flipX) {
+            flipX = true;
         }
     }
 
