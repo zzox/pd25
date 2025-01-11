@@ -6,9 +6,11 @@ import core.Sprite;
 import core.Timers;
 import core.Types;
 import core.Util;
+import game.actors.Actor;
 import game.actors.Player;
 import game.objects.CollisionItem;
 import game.objects.Mask;
+import game.objects.Tile;
 import kha.Assets;
 import kha.Color;
 import kha.Image;
@@ -33,8 +35,8 @@ class WorldScene extends Scene {
     var screenMask:Sprite;
     var noiseItems:Array<Sprite> = [];
 
-    var collisionItems:Array<CollisionItem> = [];
-    var player:Player;
+    // var collisionItems:Array<CollisionItem> = [];
+    var player:Actor;
 
     override function create () {
         // GFX stuff
@@ -66,11 +68,18 @@ class WorldScene extends Scene {
 
         camera.bgColor = 0xff3f3f74;
 
-        game.physics.gravity.y = 200;
+        // game.physics.gravity.y = 200;
 
-        collisionItems.push(new CollisionItem(23, 86, 104, 3, 'tile', All));
-        addSprite(player = new Player());
-        addSprite(player.weapon);
+        // collisionItems.push(new CollisionItem(23, 86, 104, 3, 'tile', All));
+        // addSprite(player.weapon);
+
+        for (x in 0...6) {
+            for (y in 0...5) {
+                addSprite(new Tile(x, y));
+            }
+        }
+
+        addSprite(player = new Actor(true));
         maskedSprites.push(player);
 
         timerForRelease();
@@ -91,14 +100,14 @@ class WorldScene extends Scene {
             if (n.y == 256) n.y -= 512;
         }
 
-        for (c in collisionItems) {
-            game.physics.collide(player.body, c.body);
-            // final did = game.physics.collide(player.body, c.body);
-            // if (did) {
-            //     trace(player.body.position.x, player.body.position.y,
-            //         c.body.position.x, c.body.position.y);
-            // }
-        }
+        // for (c in collisionItems) {
+        //     game.physics.collide(player.body, c.body);
+        //     // final did = game.physics.collide(player.body, c.body);
+        //     // if (did) {
+        //     //     trace(player.body.position.x, player.body.position.y,
+        //     //         c.body.position.x, c.body.position.y);
+        //     // }
+        // }
 
         if (game.keys.pressed(KeyCode.Up)) {
             screenMask.alpha = clamp(screenMask.alpha -= 0.03, 0.0, 1.0);
