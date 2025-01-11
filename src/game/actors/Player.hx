@@ -28,13 +28,13 @@ class Player extends MaskedSprite {
     // static inline final SHOOT_BUFFER:Float = 0.05;
     static inline final JUMP_BUFFER_TIME:Float = 0.1;
 
-    static inline final maxXVel:Int = 60;
+    static inline final maxXVel:Int = 90;
     static inline final maxYVel:Int = 120;
-    static inline final jumpVel:Int = 60;
+    static inline final jumpVel:Int = 90;
     static inline final jumpHoldTime:Float = 0.2;
 
     var moveState:MoveState = Running;
-    var facingRight:Bool;
+    // var facingRight:Bool;
     var airTime:Float = 0.0;
     var jumpTime:Float = 0.0;
     var hangTime:Float = 0.0;
@@ -50,13 +50,13 @@ class Player extends MaskedSprite {
         super(new Vec2(80, 0), Assets.images.guy, new IntVec2(16, 16));
 
         animation.add('idle', [0]);
-        animation.add('run', [1, 1, 0, 2, 2], 0.1);
-        // animation.add('in-air', [1, 1, 2, 2, 2], 0.08);
+        animation.add('run', [1, 1, 0, 2, 2], 0.06);
+        animation.add('in-air', [1, 1, 2, 2, 2], 0.1);
         animation.play('idle');
 
         physicsEnabled = true;
-        offset.set(7, 5);
-        body.size.set(2, 8);
+        offset.set(6, 7);
+        body.size.set(4, 8);
         body.maxVelocity.set(maxXVel, maxYVel);
         highXDrag();
 
@@ -137,7 +137,7 @@ class Player extends MaskedSprite {
 
         body.acceleration.set(xAccel * 1200, 0);
 
-        facingRight = scene.game.mouse.position.x > getMidpoint().x;
+        // facingRight = scene.game.mouse.position.x > getMidpoint().x;
     }
 
     // function handleShoot (delta:Float) {
@@ -230,22 +230,22 @@ class Player extends MaskedSprite {
     function highXDrag () body.drag.set(600, 0);
 
     function handleAnimation () {
-        // if (body.velocity.y != 0) {
-        //     animation.play('in-air');
-        // } else if (body.velocity.x == 0) {
-        //     animation.play('idle');
-        // } else {
-        //     animation.play('run');
-        // }
-
-        if (body.velocity.x == 0) {
+        if (body.velocity.y != 0) {
+            animation.play('in-air');
+        } else if (body.velocity.x == 0) {
             animation.play('idle');
         } else {
             animation.play('run');
         }
 
         // TEMP:
-        flipX = facingRight;
+        if (body.acceleration.x > 0 && !flipX) {
+            flipX = true;
+        }
+
+        if (body.acceleration.x < 0 && flipX) {
+            flipX = false;
+        }
     }
 
     // override function render (g2:Graphics, cam:Camera) {

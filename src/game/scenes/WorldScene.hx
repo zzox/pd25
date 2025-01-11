@@ -68,7 +68,7 @@ class WorldScene extends Scene {
 
         game.physics.gravity.y = 200;
 
-        collisionItems.push(new CollisionItem(23, 87, 104, 3, 'tile', All));
+        collisionItems.push(new CollisionItem(23, 86, 104, 3, 'tile', All));
         addSprite(player = new Player());
         maskedSprites.push(player);
 
