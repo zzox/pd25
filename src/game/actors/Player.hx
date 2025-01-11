@@ -13,6 +13,8 @@ enum MoveState {
     Running;
     Falling;
     Jumping;
+    PreStrike;
+    Strike;
 }
 
 // typedef Gun = {
@@ -28,6 +30,8 @@ class Player extends MaskedSprite {
     // static inline final SHOOT_BUFFER:Float = 0.05;
     static inline final JUMP_BUFFER_TIME:Float = 0.1;
 
+    static inline final TEMP_STRIKE:Float = 0.25;
+
     static inline final maxXVel:Int = 90;
     static inline final maxYVel:Int = 120;
     static inline final jumpVel:Int = 90;
@@ -38,6 +42,8 @@ class Player extends MaskedSprite {
     var airTime:Float = 0.0;
     var jumpTime:Float = 0.0;
     var hangTime:Float = 0.0;
+    var preStrikeTime:Float = 0.0;
+    var strikeTime:Float = 0.0;
 
     // var shootTime:Float = 0.0;
     // var gun:Gun;
@@ -52,6 +58,8 @@ class Player extends MaskedSprite {
         animation.add('idle', [0]);
         animation.add('run', [1, 1, 0, 2, 2], 0.06);
         animation.add('in-air', [1, 1, 2, 2, 2], 0.1);
+        animation.add('pre-strike', [3]);
+        animation.add('strike', [4]);
         animation.play('idle');
 
         physicsEnabled = true;
@@ -104,6 +112,8 @@ class Player extends MaskedSprite {
 
                 if (input.jumpBuffer < JUMP_BUFFER_TIME) {
                     jump(false);
+                } else if (input.actionBuffer < JUMP_BUFFER_TIME) {
+                    preStrike();
                 }
 
                 // REMOVE: ? quick turn around
@@ -126,6 +136,9 @@ class Player extends MaskedSprite {
                 // if (!body.touching.down && body.velocity.y > 0 && input.jumpPressed && canHang) {
                 //     hang();
                 // }
+                if (input.actionBuffer < JUMP_BUFFER_TIME) {
+                    preStrike();
+                }
             case Jumping:
                 body.velocity.y = -jumpVel;
                 // body.velocity.y = isSuperJumping ? -SUPER_JUMP_VEL : -jumpVel;
@@ -133,6 +146,22 @@ class Player extends MaskedSprite {
                 if (body.touching.down || jumpTime > jumpHoldTime || !input.jumpPressed) {
                     fall();
                 }
+
+                if (input.actionBuffer < JUMP_BUFFER_TIME) {
+                    preStrike();
+                }
+            case PreStrike:
+                preStrikeTime += delta;
+                if (preStrikeTime > TEMP_STRIKE) {
+                    strike();
+                }
+                xAccel = 0;
+            case Strike:
+                strikeTime += delta;
+                if (strikeTime > TEMP_STRIKE) {
+                    land();
+                }
+                xAccel = 0;
         }
 
         body.acceleration.set(xAccel * 1200, 0);
@@ -171,6 +200,16 @@ class Player extends MaskedSprite {
 
     //     shootTime = gun.reloadTime;
     // }
+
+    function preStrike () {
+        preStrikeTime = 0;
+        moveState = PreStrike;
+    }
+
+    function strike () {
+        strikeTime = 0;
+        moveState = Strike;
+    }
 
     // add velocity to current velocity.
     // for now, max velocity can only be set to maxvel + vel, otherwise we
@@ -230,7 +269,11 @@ class Player extends MaskedSprite {
     function highXDrag () body.drag.set(600, 0);
 
     function handleAnimation () {
-        if (body.velocity.y != 0) {
+        if (moveState == Strike) {
+            animation.play('strike');
+        } else if (moveState == PreStrike) {
+            animation.play('pre-strike');
+        } else if (body.velocity.y != 0) {
             animation.play('in-air');
         } else if (body.velocity.x == 0) {
             animation.play('idle');
